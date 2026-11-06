@@ -1,0 +1,14 @@
+{
+  "name": "gd-lvldownloader",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A small web app for downloading Geometry Dash level data by level ID.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}
