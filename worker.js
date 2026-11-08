@@ -67,7 +67,7 @@ export default {
     }
 
     const levelID = (form.get("levelID") || "").trim();
-    if (!/^\\d{1,15}$/.test(levelID) || /^0+$/.test(levelID)) {
+    if (!/^\d{1,15}$/.test(levelID) || /^0+$/.test(levelID)) {
       return json({ error: "Enter a valid numeric Geometry Dash level ID." }, 400);
     }
 
