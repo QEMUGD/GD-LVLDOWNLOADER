@@ -1,40 +1,41 @@
 # GD-LVLDOWNLOADER
 
-A small Node.js website that requests public Geometry Dash level data from Boomlings and downloads the returned level string as a `.gdlvl` text file.
+A mobile-friendly Geometry Dash level-data downloader. The public website is hosted with GitHub Pages; a Cloudflare Worker proxies requests to Boomlings. No local server, terminal, Node.js, or npm is needed to use the deployed site.
 
-## Requirements
+## One-time setup (phone-friendly)
 
-- Node.js 20 or newer
-- Internet access to reach `www.boomlings.com`
+### 1. Deploy the website with GitHub Pages
 
-## Run locally
+1. Open this repository on GitHub.
+2. Go to **Settings → Pages**.
+3. Under **Build and deployment**, choose **GitHub Actions** as the source.
+4. The workflow in `.github/workflows/pages.yml` will publish the `public` folder.
+5. When the workflow finishes, the website will be at:
+   https://qemugd.github.io/GD-LVLDOWNLOADER/
 
-1. Clone or download this repository.
-2. Open a terminal in the project folder.
-3. Run:
+### 2. Deploy the Boomlings proxy with Cloudflare Workers
 
-   ```bash
-   npm start
-   ```
+1. Sign in to Cloudflare and open **Workers & Pages**.
+2. Choose **Create → Worker** and give it a name such as `gd-lvldownloader`.
+3. Open **Edit code**.
+4. Replace the sample code with the complete contents of `worker.js` from this repository.
+5. Press **Deploy**. Cloudflare will show a URL similar to `https://gd-lvldownloader.YOUR-SUBDOMAIN.workers.dev`.
 
-4. Open [http://localhost:3000](http://localhost:3000).
+### 3. Connect the website to your Worker
 
-No npm packages are required.
-
-## Deploy
-
-Deploy it to a Node.js hosting provider that supports long-running web services. Set the start command to `npm start`. The host must allow outbound HTTPS requests to Boomlings.
-
-This is a backend application; GitHub Pages alone cannot run the Node.js proxy.
+1. Open `public/index.html` in GitHub.
+2. Tap the pencil (Edit) button.
+3. Find the line beginning `const API_URL =`.
+4. Replace the placeholder with your exact Worker URL, for example:
+   `const API_URL = "https://gd-lvldownloader.YOUR-SUBDOMAIN.workers.dev";`
+   Do not add `/api/download` to the end.
+5. Commit the change. GitHub Pages will automatically publish the update.
 
 ## Notes
 
-- The app requests levels by numeric ID.
-- It does not request or store a Geometry Dash password.
-- Only levels that the game server makes available can be downloaded.
-- The `.gdlvl` extension is used by this project for the downloaded raw level-string text; it is not claimed to be an official Geometry Dash import format.
-- Geometry Dash's server protocol and availability can change, so successful downloads depend on Boomlings.
+- Only levels made available by the Geometry Dash server can be retrieved.
+- The app does not ask for or store your Geometry Dash password.
+- The `.gdlvl` extension is this project's filename for the raw level-string text; it is not claimed to be an official Geometry Dash import format.
+- Boomlings' server protocol and availability can change.
 
-## Disclaimer
-
-This is an unofficial community utility and is not affiliated with RobTop Games.
+Unofficial community utility; not affiliated with RobTop Games.
