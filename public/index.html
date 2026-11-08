@@ -127,6 +127,8 @@
     const input = document.getElementById("levelID");
     const button = document.getElementById("downloadButton");
     const statusBox = document.getElementById("status");
+    // After deploying worker.js, paste its workers.dev URL here.
+    const API_URL = "PASTE_CLOUDFLARE_WORKER_URL_HERE";
 
     function showStatus(message, type) {
       statusBox.className = "status show " + (type || "");
@@ -166,7 +168,7 @@
       showStatus("Contacting the Geometry Dash level server…");
 
       try {
-        const response = await fetch("/api/download", {
+        const response = await fetch(API_URL.replace(/\\/$/, "") + "/api/download", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: new URLSearchParams({ levelID }).toString()
