@@ -127,8 +127,30 @@
     const input = document.getElementById("levelID");
     const button = document.getElementById("downloadButton");
     const statusBox = document.getElementById("status");
-    // After deploying worker.js, paste its workers.dev URL here.
-    const API_URL = "PASTE_CLOUDFLARE_WORKER_URL_HERE";
+    // Browser-only mode: sends the request directly to Boomlings.
+    // A compatible CORS extension may be required in browsers that block the response.
+    const BOOMLINGS_URL = "https://www.boomlings.com/database/downloadGJLevel22.php";
+
+    function parseLevelResponse(raw, requestedID) {
+      const record = raw.split("#")[0];
+      if (!record || record === "-1" || record === "-2") {
+        throw new Error("Boomlings did not return this level. Check the ID and make sure the level is publicly downloadable.");
+      }
+
+      const fields = record.split(":");
+      const values = {};
+      for (let i = 0; i + 1 < fields.length; i += 2) {
+        values[fields[i]] = fields[i + 1];
+      }
+
+      const name = values["2"];
+      const data = values["4"];
+      const id = values["1"] || requestedID;
+      if (!data) {
+        throw new Error("The server response did not contain level data. The level may be unavailable or the response format may have changed.");
+      }
+      return { id, name: name || "level", data };
+    }
 
     function showStatus(message, type) {
       statusBox.className = "status show " + (type || "");
@@ -168,24 +190,38 @@
       showStatus("Contacting the Geometry Dash level server…");
 
       try {
-        if (API_URL === "PASTE_CLOUDFLARE_WORKER_URL_HERE") {
-          throw new Error("The downloader is not connected yet. Add your Cloudflare Worker URL to the site first.");
-        }
-        const response = await fetch(API_URL.replace(/\/$/, "") + "/api/download", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({ levelID }).toString()
+        const body = new URLSearchParams({
+          gameVersion: "22",
+          binaryVersion: "42",
+          gdw: "0",
+          accountID: "0",
+          gjp2: "",
+          levelID,
+          secret: "Wmfd2893gb7"
         });
 
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok || !result.success) {
-          throw new Error(result.error || "The download failed. Please try again.");
-        }
+        const response = await fetch(BOOMLINGS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: body.toString(),
+          mode: "cors",
+          credentials: "omit"
+        });
 
-        saveLevel(result.id, result.name, result.data);
-        showStatus('Downloaded "' + result.name + '" (ID ' + result.id + ").", "success");
+        if (!response.ok) {
+          throw new Error("Boomlings returned HTTP " + response.status + ".");
+        }
+        const raw = await response.text();
+        const level = parseLevelResponse(raw, levelID);
+        saveLevel(level.id, level.name, level.data);
+        showStatus('Downloaded "' + level.name + '" (ID ' + level.id + ").", "success");
       } catch (error) {
-        showStatus(error.message || "A network error occurred.", "error");
+        const message = error && error.message ? error.message : "A network error occurred.";
+        if (error instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(message)) {
+          showStatus("The browser blocked the direct Boomlings request (usually CORS). Enable your CORS extension for this site, reload the page, and try again. No backend or proxy is used.", "error");
+        } else {
+          showStatus(message, "error");
+        }
       } finally {
         button.disabled = false;
         button.textContent = "↓ Download";
