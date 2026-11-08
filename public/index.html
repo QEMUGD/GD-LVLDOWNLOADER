@@ -168,7 +168,10 @@
       showStatus("Contacting the Geometry Dash level server…");
 
       try {
-        const response = await fetch(API_URL.replace(/\\/$/, "") + "/api/download", {
+        if (API_URL === "PASTE_CLOUDFLARE_WORKER_URL_HERE") {
+          throw new Error("The downloader is not connected yet. Add your Cloudflare Worker URL to the site first.");
+        }
+        const response = await fetch(API_URL.replace(/\/$/, "") + "/api/download", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: new URLSearchParams({ levelID }).toString()
